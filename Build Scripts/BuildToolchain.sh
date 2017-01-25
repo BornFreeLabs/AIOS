@@ -5,7 +5,7 @@
 # 
 #
 # Optional parameteres below:
-
+cd ..
 PARALLEL_JOBS=1             # Number of parallel make jobs, 1 for RPi1 and 4 for RPi2 and RPi3 recommended.
 STRIP_AND_DELETE_DOCS=1     # Strip binaries and delete manpages to save space at the end of chapter 5?
 
@@ -16,14 +16,14 @@ set -o errexit
 
 #Set the Target Variable
 export AIOS_TGT=aios-$(uname -m)
-
+export AIOS=$(pwd)/Build/aios
 
 function prebuild_sanity_check {
 
 
     if ! [[ -v AIOS ]] ; then
         echo "You forgot to set your LFS environment variable! Setting it now"
-        export AIOS=$(pwd)/../Build/aios
+        
     fi
 
 
