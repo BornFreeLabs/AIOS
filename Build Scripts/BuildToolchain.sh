@@ -5,8 +5,9 @@
 # 
 #
 # Optional parameteres below:
+# Stores in folder /tools
 cd ..
-PARALLEL_JOBS=1             # Number of parallel make jobs, 1 for RPi1 and 4 for RPi2 and RPi3 recommended.
+PARALLEL_JOBS=4             # Number of parallel make jobs, 1 for RPi1 and 4 for RPi2 and RPi3 recommended.
 STRIP_AND_DELETE_DOCS=1     # Strip binaries and delete manpages to save space at the end of chapter 5?
 
 # End of optional parameters
@@ -15,7 +16,7 @@ set -o nounset
 set -o errexit
 
 #Set the Target Variable
-export AIOS_TGT=aios-$(uname -m)
+export AIOS_TGT=$(uname -m)-aios-linux-gnueabihf
 export AIOS=$(pwd)/Build/aios
 
 function prebuild_sanity_check {
@@ -39,7 +40,7 @@ function prebuild_sanity_check {
     fi
 
 
-    if ! [[ -d $AIOS/tools ]] ; then
+    if ! [[ -d /tools ]] ; then
         echo "Can't find your tools directory!"
         exit 1
     fi
@@ -119,28 +120,6 @@ function timer {
 
 prebuild_sanity_check
 check_tarballs
-
-if [[ $(free | grep 'Swap:' | tr -d ' ' | cut -d ':' -f2) == "000" ]] ; then
-    echo -e "\nYou are almost certainly going to want to add some swap space before building!"
-    echo -e "(See http://www.intestinate.com/pilfs/beyond.html#addswap for instructions)"
-    echo -e "Continue without swap?"
-    select yn in "Yes" "No"; do
-        case $yn in
-            Yes ) break;;
-            No ) exit;;
-        esac
-    done
-fi
-
-echo -e "\nThis is your last chance to quit before we start building... continue?"
-echo "(Note that if anything goes wrong during the build, the script will abort mission)"
-select yn in "Yes" "No"; do
-    case $yn in
-        Yes ) break;;
-        No ) exit;;
-    esac
-done
-
 total_time=$(timer)
 sbu_time=$(timer)
 
@@ -148,7 +127,7 @@ echo "# 5.4. Binutils-2.27 - Pass 1"
 cd $AIOS/sources
 tar -jxf binutils-2.27.tar.bz2
 cd binutils-2.27
-mkdir -v build
+mkdir -p build
 cd build
 ../configure --prefix=/tools            \
              --with-sysroot=$AIOS        \
@@ -195,7 +174,7 @@ do
 #define STANDARD_STARTFILE_PREFIX_2 ""' >> $file
   touch $file.orig
 done
-mkdir -v build
+mkdir -p build
 cd build
 ../configure                                       \
     --target=$AIOS_TGT                              \
@@ -235,7 +214,7 @@ cd $AIOS/sources
 echo "# 5.7. Glibc-2.24"
 tar -Jxf glibc-2.24.tar.xz
 cd glibc-2.24
-mkdir -v build
+mkdir -p build
 cd build
 ../configure                             \
       --prefix=/tools                    \
@@ -255,7 +234,7 @@ rm -rf glibc-2.24
 echo "# 5.8. Libstdc++-6.2.0"
 tar -jxf gcc-6.2.0.tar.bz2
 cd gcc-6.2.0
-mkdir -v build
+mkdir -p build
 cd build
 ../libstdc++-v3/configure           \
     --host=$AIOS_TGT                 \
@@ -273,7 +252,7 @@ rm -rf gcc-6.2.0
 echo "# 5.9. Binutils-2.27 - Pass 2"
 tar -jxf binutils-2.27.tar.bz2
 cd binutils-2.27
-mkdir -v build
+mkdir -p build
 cd build
 CC=$AIOS_TGT-gcc                \
 AR=$AIOS_TGT-ar                 \
@@ -324,7 +303,7 @@ tar -Jxf ../gmp-6.1.1.tar.xz
 mv -v gmp-6.1.1 gmp
 tar -zxf ../mpc-1.0.3.tar.gz
 mv -v mpc-1.0.3 mpc
-mkdir -v build
+mkdir -p build
 cd build
 CC=$AIOS_TGT-gcc                                    \
 CXX=$AIOS_TGT-g++                                   \
@@ -333,7 +312,7 @@ RANLIB=$AIOS_TGT-ranlib                             \
 ../configure                                       \
     --prefix=/tools                                \
     --with-local-prefix=/tools                     \
-    --with-native-system-header-dir=/tools/include \
+    --with-native-system-header-dir=$AIOS/tools/include \
     --enable-languages=c,c++                       \
     --disable-libstdcxx-pch                        \
     --disable-multilib                             \
@@ -341,7 +320,7 @@ RANLIB=$AIOS_TGT-ranlib                             \
     --disable-libgomp
 make
 make install
-ln -sv gcc /tools/bin/cc
+ln -sv gcc $AIOS/tools/bin/cc
 cd $AIOS/sources
 rm -rf gcc-6.2.0
 
@@ -349,12 +328,12 @@ echo "# 5.11. Tcl-core-8.6.6"
 tar -zxf tcl-core8.6.6-src.tar.gz
 cd tcl8.6.6
 cd unix
-./configure --prefix=/tools
+./configure --prefix=$AIOS/tools
 make -j $PARALLEL_JOBS
 make install
-chmod -v u+w /tools/lib/libtcl8.6.so
+chmod -v u+w $AIOS/tools/lib/libtcl8.6.so
 make install-private-headers
-ln -sv tclsh8.6 /tools/bin/tclsh
+ln -sv tclsh8.6 $AIOS/tools/bin/tclsh
 cd $AIOS/sources
 rm -rf tcl8.6.6
 
@@ -363,9 +342,9 @@ tar -zxf expect5.45.tar.gz
 cd expect5.45
 cp -v configure{,.orig}
 sed 's:/usr/local/bin:/bin:' configure.orig > configure
-./configure --prefix=/tools       \
-            --with-tcl=/tools/lib \
-            --with-tclinclude=/tools/include
+./configure --prefix=$AIOS/tools       \
+            --with-tcl=$AIOS/tools/lib \
+            --with-tclinclude=$AIOS/tools/include
 make -j $PARALLEL_JOBS
 make SCRIPTS="" install
 cd $AIOS/sources
