@@ -227,7 +227,7 @@ cd build
 make -j $PARALLEL_JOBS
 make install
 # Compatibility symlink for non ld-linux-armhf awareness
-ln -sv ld-2.24.so $AIOS/tools/lib/ld-linux.so.3
+ln -sv ld-2.24.so /tools/lib/ld-linux.so.3
 cd $AIOS/sources
 rm -rf glibc-2.24
 
