@@ -10,14 +10,9 @@ cd ..
 PARALLEL_JOBS=4             # Number of parallel make jobs, 1 for RPi1 and 4 for RPi2 and RPi3 recommended.
 STRIP_AND_DELETE_DOCS=1     # Strip binaries and delete manpages to save space at the end of chapter 5?
 
-# End of optional parameters
-
 set -o nounset
 set -o errexit
 
-#Set the Target Variable
-export AIOS_TGT=$(uname -m)-aios-linux-gnueabihf
-export AIOS=$(pwd)/Build/aios
 
 function prebuild_sanity_check {
 
@@ -403,6 +398,7 @@ rm -rf bzip2-1.0.6
 echo "# 5.18. Coreutils-8.26"
 tar -Jxf coreutils-8.26.tar.xz
 cd coreutils-8.26
+export FORCE_UNSAFE_CONFIGURE=1 
 ./configure --prefix=/tools --enable-install-program=hostname
 make -j $PARALLEL_JOBS
 make install
