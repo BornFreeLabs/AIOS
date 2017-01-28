@@ -1,5 +1,7 @@
 #!/bin/bash
 #
+# Written by Subhojeet Pramanik
+#
 # The script downloads all the required packages one by one.
 # Downloaded packages are found in ../Packages
 
